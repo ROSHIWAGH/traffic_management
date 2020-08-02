@@ -15,22 +15,22 @@ from utils import import_train_configuration, set_sumo, set_train_path
 
 if __name__ == "__main__":
 
-    
+    config = import_train_configuration(config_file='training_settings.ini')    
     sumo_cmd = set_sumo(False, 'sumo_config.sumocfg', 5400)
     path = set_train_path('models')
 
     Model = TrainModel(
-        num_layers=4, 
-        width_layers=400, 
-        batch_size=100, 
-        learning_rate =0.01, 
-        input_dim=80,               #num of states
-        output_dim=4                #num of actions
+        config['num_layers'], 
+        config['width_layers'], 
+        config['batch_size'], 
+        config['learning_rate'], 
+        input_dim= config['num_states'],               #num of states
+        output_dim=config['num_actions']                #num of actions
     )
 
     TrafficGen = TrafficGenerator(
-        5400,            #max steps
-        1000      #n cars generated
+        config['max_steps'],            #max steps
+        config['n_cars_generated']      #n cars generated
     )
         
     Simulation = Simulation(
@@ -38,14 +38,21 @@ if __name__ == "__main__":
         Memory,
         TrafficGen,
         sumo_cmd,
-        gamma=0.75,            #gamma value
-        max_steps=5400,        #max steps during simulation
-        green_duration=10,   #green duration
-        yellow_duration=4,
-        num_states=60,
-        num_actions=4,
-        training_epochs=800
+        config['gamma'],            #gamma value
+        config['max_steps'],        #max steps during simulation
+        config['green_duration'],   #green duration
+        config['yellow_duration'],
+        config['num_states'],
+        config['num_actions'],
+        config['training_epochs']
     )
+
+    Visualization = Visualization(path, dpi= 96)
+    
+    Memory =Memory(
+        config['memory_size_max'],
+        config['memory_size_min']
+        )
     
     episode = 0
     timestamp_start = datetime.datetime.now()

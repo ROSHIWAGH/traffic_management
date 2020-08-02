@@ -288,6 +288,34 @@ class Simulation:
         self._cumulative_wait_store.append(self._sum_waiting_time)  # total number of seconds waited by cars in this episode
         self._avg_queue_length_store.append(self._sum_queue_length / self._max_steps)  # average number of queued cars per step, in this episode
 
+def _replay(self):
+        """
+        Retrieve a group of samples from the memory and for each of them update the learning equation, then train
+        """
+        batch = self._Memory.get_samples(self._Model.batch_size)
+
+        if len(batch) > 0:  # if the memory is full enough
+            states = np.array([val[0] for val in batch])  # extract states from the batch
+            next_states = np.array([val[3] for val in batch])  # extract next states from the batch
+
+            # prediction
+            q_s_a = self._Model.predict_batch(states)  # predict Q(state), for every sample
+            q_s_a_d = self._Model.predict_batch(next_states)  # predict Q(next_state), for every sample
+
+            # setup training arrays
+            x = np.zeros((len(batch), self._num_states))
+            y = np.zeros((len(batch), self._num_actions))
+
+            for i, b in enumerate(batch):
+                state, action, reward, _ = b[0], b[1], b[2], b[3]  # extract data from one sample
+                current_q = q_s_a[i]  # get the Q(state) predicted before
+                current_q[action] = reward + self._gamma * np.amax(q_s_a_d[i])  # update Q(state, action)
+                x[i] = state
+                y[i] = current_q  # Q(state) that includes the updated action value
+
+            self._Model.train_batch(x, y)  # train the NN
+
+
 
     @property
     def reward_store(self):

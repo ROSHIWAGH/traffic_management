@@ -54,6 +54,19 @@ class TrainModel:
         self._model.save(os.path.join(path, 'trained_model.h5'))
         plot_model(self._model, to_file=os.path.join(path, 'model_structure.png'), show_shapes=True, show_layer_names=True)
 
+    def predict_batch(self, states):
+        """
+        Predict the action values from a batch of states
+        """
+        return self._model.predict(states)
+
+
+    def train_batch(self, states, q_sa):
+        """
+        Train the nn using the updated q-values
+        """
+        self._model.fit(states, q_sa, epochs=1, verbose=0)
+
 
     @property
     def input_dim(self):
